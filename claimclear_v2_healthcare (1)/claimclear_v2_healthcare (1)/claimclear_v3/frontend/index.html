@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ClaimClear — Healthcare Insurance Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --navy:#0f2240;--navy-mid:#1a3560;--navy-light:#254880;
+  --accent:#2563d4;--accent-light:#e8f0fe;
+  --teal:#0d9488;--teal-light:#e6f7f6;
+  --amber:#b45309;--amber-light:#fef3c7;
+  --red:#b91c1c;--red-light:#fee2e2;
+  --green:#15803d;--green-light:#dcfce7;
+  --purple:#7c3aed;--purple-light:#ede9fe;
+  --text:#0f172a;--text-mid:#475569;--text-soft:#94a3b8;
+  --border:#e2e8f0;--border-mid:#cbd5e1;
+  --surface:#f8fafc;--white:#ffffff;
+  --shadow-sm:0 1px 3px rgba(15,34,64,.08),0 1px 2px rgba(15,34,64,.04);
+  --shadow-md:0 4px 16px rgba(15,34,64,.10),0 1px 4px rgba(15,34,64,.06);
+  --shadow-lg:0 12px 40px rgba(15,34,64,.14),0 4px 12px rgba(15,34,64,.08);
+  --radius:10px;--radius-lg:14px;--radius-xl:20px;
+  --font-display:'Fraunces',Georgia,serif;--font-body:'DM Sans',system-ui,sans-serif;
+  --tr:0.18s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--font-body);color:var(--text);background:var(--surface);}
+#app{display:flex;height:100vh;overflow:hidden;}
+
+/* ── Sidebar ── */
+.sidebar{width:248px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;z-index:10;}
+.sidebar-logo{padding:26px 22px 18px;border-bottom:1px solid rgba(255,255,255,.08);}
+.logo-row{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-icon svg{width:18px;height:18px;fill:#fff;}
+.logo-name{font-family:var(--font-display);font-size:18px;font-weight:600;color:#fff;letter-spacing:-.3px;}
+.logo-tag{font-size:10px;color:rgba(255,255,255,.38);letter-spacing:.5px;text-transform:uppercase;margin-top:4px;padding-left:44px;}
+.health-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(13,148,136,.18);color:#5eead4;font-size:9px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:3px 9px;border-radius:20px;margin-top:8px;margin-left:44px;border:1px solid rgba(13,148,136,.3);}
+.sidebar-nav{padding:14px 10px;flex:1;overflow-y:auto;}
+.nav-label{font-size:10px;font-weight:500;letter-spacing:.8px;color:rgba(255,255,255,.28);text-transform:uppercase;padding:0 12px;margin:14px 0 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:background var(--tr);color:rgba(255,255,255,.58);font-size:13.5px;margin-bottom:2px;user-select:none;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.65;}
+.nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9);}
+.nav-item.active{background:var(--accent);color:#fff;}
+.nav-item.active svg{opacity:1;}
+.nav-pill{margin-left:auto;background:rgba(255,255,255,.13);color:rgba(255,255,255,.75);font-size:10px;padding:2px 7px;border-radius:10px;}
+.nav-item.active .nav-pill{background:rgba(255,255,255,.22);color:#fff;}
+.sidebar-footer{padding:14px 10px;border-top:1px solid rgba(255,255,255,.08);}
+.new-claim-btn{display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border-radius:9px;background:var(--accent);color:#fff;border:none;font-family:var(--font-body);font-size:13.5px;font-weight:500;cursor:pointer;transition:background var(--tr);margin-bottom:10px;}
+.new-claim-btn:hover{background:#1d55c0;}
+.new-claim-btn svg{width:16px;height:16px;fill:#fff;flex-shrink:0;}
+.cmp-loading-info{display:none;align-items:center;gap:8px;font-size:13px;color:var(--accent);margin-bottom:14px;padding:10px 14px;background:var(--accent-light);border-radius:8px;border:1px solid #c7d9fc;}
+.user-name{font-size:13px;color:rgba(255,255,255,.8);}
+.user-plan{font-size:11px;color:rgba(255,255,255,.33);}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 30px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-title{font-family:var(--font-display);font-size:18px;font-weight:500;color:var(--text);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.topbar-btn{padding:7px 16px;border-radius:8px;border:1px solid var(--border-mid);background:var(--white);font-family:var(--font-body);font-size:13px;color:var(--text-mid);cursor:pointer;transition:all var(--tr);}
+.topbar-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+.topbar-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.topbar-btn.primary:hover{background:#1d55c0;}
+.policy-sel{padding:7px 12px;border-radius:8px;border:1px solid var(--border-mid);font-family:var(--font-body);font-size:13px;color:var(--text);background:var(--white);outline:none;min-width:210px;cursor:pointer;}
+.content{flex:1;overflow-y:auto;padding:30px;}
+.screen{display:none;animation:fadeIn .2s ease;}
+.screen.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ── Stats ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:26px;}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;box-shadow:var(--shadow-sm);}
+.stat-lbl{font-size:11px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.4px;}
+.stat-val{font-family:var(--font-display);font-size:28px;font-weight:600;color:var(--text);margin:5px 0 3px;letter-spacing:-.5px;}
+.stat-sub{font-size:12px;color:var(--text-mid);}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;}
+
+/* ── Section header ── */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.sec-title{font-family:var(--font-display);font-size:16px;font-weight:500;color:var(--text);}
+.filter-bar{display:flex;gap:7px;}
+.fc{padding:5px 13px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:var(--white);color:var(--text-mid);cursor:pointer;transition:all var(--tr);}
+.fc:hover{border-color:var(--accent);color:var(--accent);}
+.fc.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* ── Claims Table ── */
+.tbl{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);}
+.tbl-head{display:grid;grid-template-columns:2.2fr 1.4fr 1fr 1fr 1fr;padding:11px 20px;background:var(--surface);border-bottom:1px solid var(--border);}
+.th{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;}
+.tbl-row{display:grid;grid-template-columns:2.2fr 1.4fr 1fr 1fr 1fr;padding:15px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background var(--tr);}
+.tbl-row:last-child{border-bottom:none;}
+.tbl-row:hover{background:var(--surface);}
+.cl-name{display:flex;align-items:center;gap:10px;}
+.cl-icon{width:34px;height:34px;border-radius:8px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.cl-title{font-size:14px;font-weight:500;color:var(--text);}
+.cl-id{font-size:11px;color:var(--text-soft);margin-top:1px;}
+.td{font-size:13px;color:var(--text-mid);}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge.approved{background:var(--green-light);color:var(--green);}
+.badge.denied{background:var(--red-light);color:var(--red);}
+.badge.pending{background:var(--amber-light);color:var(--amber);}
+.badge.processing{background:var(--accent-light);color:var(--accent);}
+.act-btn{font-size:12px;color:var(--accent);font-weight:500;cursor:pointer;padding:5px 11px;border-radius:6px;border:1px solid var(--accent-light);background:var(--accent-light);transition:all var(--tr);font-family:var(--font-body);}
+.act-btn:hover{background:var(--accent);color:#fff;}
+
+/* ── My Claims screen ── */
+.claims-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+.sum-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:14px;}
+.sum-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.sum-val{font-family:var(--font-display);font-size:22px;font-weight:600;}
+.sum-lbl{font-size:12px;color:var(--text-soft);margin-top:2px;}
+
+/* ── Explain ── */
+.exp-layout{display:grid;grid-template-columns:1fr 340px;gap:22px;}
+.exp-main{display:flex;flex-direction:column;gap:18px;}
+.exp-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);}
+.exp-card-lbl{font-size:11px;font-weight:500;letter-spacing:.6px;text-transform:uppercase;color:var(--text-soft);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.exp-card-lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.steps-list{list-style:none;display:flex;flex-direction:column;gap:9px;}
+.step-item{display:flex;gap:11px;align-items:flex-start;}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-num.done{background:var(--green);}
+.step-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.step-desc{font-size:13px;color:var(--text-mid);line-height:1.55;}
+.exp-sidebar{display:flex;flex-direction:column;gap:14px;}
+.appeal-box{background:linear-gradient(135deg,var(--navy),var(--navy-mid));border-radius:var(--radius-lg);padding:20px;}
+.appeal-box-title{font-family:var(--font-display);font-size:15px;font-weight:600;color:#fff;margin-bottom:6px;}
+.appeal-box-sub{font-size:12px;color:rgba(255,255,255,.58);line-height:1.55;margin-bottom:13px;}
+.appeal-box-btn{width:100%;padding:9px;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);font-family:var(--font-body);font-size:13px;cursor:pointer;transition:all var(--tr);}
+.appeal-box-btn:hover{background:rgba(255,255,255,.2);}
+.gls-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-sm);}
+.gls-title{font-family:var(--font-display);font-size:14px;font-weight:500;color:var(--text);margin-bottom:12px;}
+.gls-item{border-bottom:1px solid var(--border);padding:9px 0;}
+.gls-item:last-child{border-bottom:none;}
+.gls-term{font-size:13px;font-weight:500;color:var(--accent);margin-bottom:2px;}
+.gls-def{font-size:12px;color:var(--text-mid);line-height:1.5;}
+
+/* ── Chat ── */
+.chat-wrap{display:grid;grid-template-columns:272px 1fr;gap:20px;height:calc(100vh - 120px);}
+.chat-side{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow-y:auto;box-shadow:var(--shadow-sm);}
+.chat-side-head{padding:14px 14px 10px;border-bottom:1px solid var(--border);}
+.search-inp{width:100%;padding:7px 11px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-family:var(--font-body);font-size:13px;color:var(--text);outline:none;transition:border-color var(--tr);}
+.search-inp:focus{border-color:var(--accent);}
+.chat-cl-item{padding:11px 14px;cursor:pointer;transition:background var(--tr);border-bottom:1px solid var(--border);}
+.chat-cl-item:hover{background:var(--surface);}
+.chat-cl-item.active{background:var(--accent-light);border-right:2px solid var(--accent);}
+.chat-cl-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.chat-cl-sub{font-size:11px;color:var(--text-soft);}
+.chat-main{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);display:flex;flex-direction:column;box-shadow:var(--shadow-sm);overflow:hidden;}
+.chat-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.chat-hdr h3{font-size:14px;font-weight:500;color:var(--text);}
+.chat-hdr p{font-size:12px;color:var(--text-soft);margin-top:1px;}
+.ai-ind{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--teal);font-weight:500;}
+.ai-dot{width:7px;height:7px;background:var(--teal);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.chat-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;}
+.msg{display:flex;gap:9px;max-width:86%;}
+.msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.msg-av{width:27px;height:27px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
+.msg-av.ai{background:var(--navy);color:#fff;}
+.msg-av.user{background:var(--accent);color:#fff;}
+.msg-bbl{padding:10px 13px;border-radius:12px;font-size:14px;line-height:1.65;background:var(--surface);border:1px solid var(--border);}
+.msg.user .msg-bbl{background:var(--accent);color:#fff;border-color:var(--accent);border-radius:12px 4px 12px 12px;}
+.msg.ai .msg-bbl{border-radius:4px 12px 12px 12px;}
+.msg-time{font-size:10px;color:var(--text-soft);margin-top:3px;}
+.msg.user .msg-time{text-align:right;}
+.sq-bar{padding:0 18px 12px;display:flex;flex-wrap:wrap;gap:7px;}
+.sq{padding:5px 13px;border-radius:20px;font-size:12px;color:var(--accent);border:1px solid var(--accent-light);background:var(--accent-light);cursor:pointer;transition:all var(--tr);}
+.sq:hover{background:var(--accent);color:#fff;}
+.chat-inp-area{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:9px;align-items:flex-end;flex-shrink:0;}
+.chat-ta{flex:1;border:1px solid var(--border-mid);border-radius:10px;padding:10px 13px;font-family:var(--font-body);font-size:14px;color:var(--text);resize:none;outline:none;min-height:42px;max-height:120px;transition:border-color var(--tr);background:var(--surface);line-height:1.5;}
+.chat-ta:focus{border-color:var(--accent);background:var(--white);}
+.send-btn{width:40px;height:40px;border-radius:10px;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--tr);flex-shrink:0;}
+.send-btn:hover{background:#1d55c0;}
+.send-btn:disabled{background:var(--border-mid);cursor:not-allowed;}
+.send-btn svg{width:16px;height:16px;fill:#fff;}
+
+/* ── Compare ── */
+.compare-hero{background:linear-gradient(135deg,var(--navy),var(--navy-mid));border-radius:var(--radius-xl);padding:30px;margin-bottom:26px;color:#fff;}
+.compare-hero h2{font-family:var(--font-display);font-size:21px;font-weight:600;margin-bottom:7px;}
+.compare-hero p{font-size:13.5px;color:rgba(255,255,255,.68);line-height:1.65;max-width:580px;}
+.hero-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.4px;margin-bottom:12px;}
+.file-chips{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:18px;}
+.file-chip{display:flex;align-items:center;gap:7px;background:var(--accent-light);border:1px solid #c7d9fc;border-radius:8px;padding:6px 11px;font-size:13px;color:var(--accent);}
+.fc-rm{cursor:pointer;color:var(--text-soft);font-size:15px;line-height:1;margin-left:3px;}
+.fc-rm:hover{color:var(--red);}
+.cmp-form{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:18px;box-shadow:var(--shadow-sm);}
+.cmp-result{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px;box-shadow:var(--shadow-sm);}
+.cmp-tbl{width:100%;border-collapse:collapse;margin:18px 0;}
+.cmp-tbl th{background:var(--navy);color:#fff;padding:10px 15px;font-size:12px;font-weight:500;text-align:left;}
+.cmp-tbl th:first-child{border-radius:8px 0 0 0;width:160px;}
+.cmp-tbl th:last-child{border-radius:0 8px 0 0;}
+.cmp-tbl td{padding:11px 15px;font-size:13px;color:var(--text-mid);border-bottom:1px solid var(--border);}
+.cmp-tbl tr:nth-child(even) td{background:#fafbfd;}
+.cmp-tbl td:first-child{font-weight:500;color:var(--text);background:var(--surface)!important;}
+.rec-box{background:linear-gradient(135deg,var(--teal-light),#d1faf5);border:1px solid #99e6dd;border-radius:var(--radius-lg);padding:18px;margin-top:18px;}
+.rec-box h3{font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--teal);margin-bottom:8px;}
+.rec-box p{font-size:13.5px;color:var(--text-mid);line-height:1.7;}
+.cond-box{background:var(--purple-light);border:1px solid #c4b5fd;border-radius:var(--radius-lg);padding:18px;margin-top:14px;}
+.cond-box h3{font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--purple);margin-bottom:8px;}
+.cond-box p{font-size:13.5px;color:var(--text-mid);line-height:1.7;}
+
+/* ── Predict ── */
+.pred-hero{background:linear-gradient(135deg,#1e3a5f,var(--navy));border-radius:var(--radius-xl);padding:30px;margin-bottom:26px;color:#fff;}
+.pred-hero h2{font-family:var(--font-display);font-size:21px;font-weight:600;margin-bottom:7px;}
+.pred-hero p{font-size:13.5px;color:rgba(255,255,255,.68);line-height:1.65;max-width:580px;}
+.pred-form{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px;box-shadow:var(--shadow-sm);margin-bottom:22px;}
+.pred-result{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px;box-shadow:var(--shadow-sm);}
+.verdict{border-radius:var(--radius-lg);padding:22px;margin-bottom:18px;text-align:center;}
+.verdict.approved{background:var(--green-light);border:2px solid #86efac;}
+.verdict.denied{background:var(--red-light);border:2px solid #fca5a5;}
+.verdict.uncertain{background:var(--amber-light);border:2px solid #fcd34d;}
+.verdict-icon{font-size:38px;margin-bottom:10px;}
+.verdict-lbl{font-family:var(--font-display);font-size:22px;font-weight:600;margin-bottom:5px;}
+.verdict-lbl.approved{color:var(--green);}
+.verdict-lbl.denied{color:var(--red);}
+.verdict-lbl.uncertain{color:var(--amber);}
+.verdict-conf{font-size:13.5px;color:var(--text-mid);}
+.conf-track{background:#e2e8f0;border-radius:20px;height:9px;margin:14px 0 6px;overflow:hidden;}
+.conf-fill{height:100%;border-radius:20px;transition:width .9s cubic-bezier(0.4,0,0.2,1);}
+.pred-sec{margin-top:18px;}
+.pred-sec-lbl{font-size:11px;font-weight:500;letter-spacing:.6px;text-transform:uppercase;color:var(--text-soft);margin-bottom:9px;display:flex;align-items:center;gap:8px;}
+.pred-sec-lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.pred-list{list-style:none;display:flex;flex-direction:column;gap:7px;}
+.pred-list li{display:flex;gap:9px;font-size:13px;color:var(--text-mid);align-items:flex-start;padding:8px 11px;background:var(--surface);border-radius:8px;}
+.pred-list li span{flex-shrink:0;font-size:15px;}
+
+/* ── Modals ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,34,64,.5);z-index:1000;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:var(--radius-xl);width:560px;max-width:92vw;box-shadow:var(--shadow-lg);animation:mIn .22s cubic-bezier(0.34,1.56,0.64,1);max-height:92vh;overflow-y:auto;}
+@keyframes mIn{from{opacity:0;transform:scale(.93) translateY(10px)}to{opacity:1;transform:none}}
+.modal-hdr{padding:22px 26px 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.modal-title{font-family:var(--font-display);font-size:17px;font-weight:500;color:var(--text);}
+.modal-x{background:none;border:none;cursor:pointer;color:var(--text-soft);padding:4px;border-radius:6px;font-size:18px;line-height:1;}
+.modal-x:hover{background:var(--surface);color:var(--text);}
+.modal-body{padding:18px 26px 26px;}
+.fg{margin-bottom:16px;}
+.flbl{font-size:13px;font-weight:500;color:var(--text);margin-bottom:5px;display:block;}
+.finp,.fsel,.fta{width:100%;padding:9px 13px;border-radius:8px;border:1px solid var(--border-mid);font-family:var(--font-body);font-size:13.5px;color:var(--text);background:var(--white);outline:none;transition:border-color var(--tr);}
+.finp:focus,.fsel:focus,.fta:focus{border-color:var(--accent);}
+.fta{resize:vertical;min-height:96px;line-height:1.55;}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+.btn-ghost{padding:8px 18px;border-radius:8px;border:1px solid var(--border-mid);background:none;font-family:var(--font-body);font-size:13.5px;color:var(--text-mid);cursor:pointer;transition:all var(--tr);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-pri{padding:8px 22px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-family:var(--font-body);font-size:13.5px;cursor:pointer;transition:background var(--tr);font-weight:500;}
+.btn-pri:hover{background:#1d55c0;}
+.btn-pri:disabled{background:var(--border-mid);cursor:not-allowed;}
+.ai-box{background:var(--accent-light);border:1px solid #c7d9fc;border-radius:var(--radius-lg);padding:14px;margin-top:14px;display:none;}
+.ai-box.show{display:block;}
+.ai-box-title{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+.req-docs{margin-top:10px;list-style:none;}
+.req-docs li{font-size:12.5px;color:var(--text-mid);padding:3px 0;display:flex;gap:7px;align-items:center;}
+.req-docs li::before{content:'✓';color:var(--teal);font-weight:700;flex-shrink:0;}
+.pred-inline{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:9px;margin-top:10px;font-size:13px;font-weight:500;}
+.pred-inline.approved{background:var(--green-light);color:var(--green);}
+.pred-inline.denied{background:var(--red-light);color:var(--red);}
+.pred-inline.uncertain{background:var(--amber-light);color:var(--amber);}
+.appeal-result{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-top:14px;display:none;}
+.appeal-result.show{display:block;}
+.letter-pre{font-size:13px;line-height:1.75;color:var(--text-mid);white-space:pre-wrap;}
+
+/* ── Misc ── */
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;vertical-align:middle;margin-right:5px;}
+.spin.d{border-color:rgba(0,0,0,.12);border-top-color:var(--accent);}
+@keyframes rot{to{transform:rotate(360deg)}}
+.ai-loading{display:flex;align-items:center;gap:9px;color:var(--text-soft);font-size:13.5px;padding:18px 0;}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:#fff;padding:11px 18px;border-radius:10px;font-size:13.5px;z-index:9999;box-shadow:var(--shadow-lg);display:none;animation:tIn .25s ease;}
+.toast.show{display:block;}
+@keyframes tIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.health-notice{display:flex;align-items:center;gap:10px;background:var(--teal-light);border:1px solid #99e6dd;border-radius:10px;padding:11px 15px;font-size:13px;color:var(--teal);margin-bottom:20px;}
+.health-notice strong{font-weight:600;}
+.empty-state{text-align:center;padding:48px 24px;color:var(--text-soft);}
+.empty-state .ei{font-size:40px;margin-bottom:10px;}
+.empty-state h3{font-family:var(--font-display);font-size:17px;font-weight:500;color:var(--text);margin-bottom:6px;}
+.empty-state p{font-size:13.5px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ───────── SIDEBAR ───────── -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-row">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+        </div>
+        <div class="logo-name">ClaimClear</div>
+      </div>
+      <div class="logo-tag">AI Insurance Assistant</div>
+      <div class="health-pill">🏥 Healthcare Only</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" onclick="showScreen('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        Dashboard
+      </div>
+
+      <div class="nav-label">Claims</div>
+      <div class="nav-item" onclick="showScreen('myclaims',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        My Claims <span class="nav-pill" id="nb-claims">0</span>
+      </div>
+
+      <div class="nav-item" id="nav-explain" onclick="showScreen('explain',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        AI Claim Analysis <span class="nav-pill">AI</span>
+      </div>
+      
+      <div class="nav-item" onclick="showScreen('chat',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        AI Chat
+      </div>
+
+      <div class="nav-label">Tools</div>
+      <div class="nav-item" onclick="showScreen('compare',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 3H5C3.9 3 3 3.9 3 5v4.5c0 1.1.9 2 2 2h4.5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 6.5H5V5h4.5v4.5zm9.5-6.5h-4.5C13.4 3 12.5 3.9 12.5 5v4.5c0 1.1.9 2 2 2H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 6.5h-4.5V5H19v4.5zM9.5 12.5H5c-1.1 0-2 .9-2 2V19c0 1.1.9 2 2 2h4.5c1.1 0 2-.9 2-2v-4.5c0-1.1-.9-2-2-2zm0 6.5H5v-4.5h4.5V19zm5-.5c0 2.76 2.24 5 5 5s5-2.24 5-5-2.24-5-5-5-5 2.24-5 5zm8 0c0 1.65-1.35 3-3 3s-3-1.35-3-3 1.35-3 3-3 3 1.35 3 3z"/></svg>
+        Compare Policies <span class="nav-pill">New</span>
+      </div>
+      <div class="nav-item" onclick="showScreen('predict',this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"/></svg>
+        Claim Predictor <span class="nav-pill">AI</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="new-claim-btn" onclick="document.getElementById('modal').classList.add('open')">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        New Claim
+      </button>
+    </div>
+  </div>
+
+  <!-- ───────── MAIN ───────── -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Healthcare Dashboard</div>
+      <div class="topbar-right">
+        <select class="policy-sel" id="policy-selector">
+          <option value="">Select Policy (AI context)</option>
+          <option value="sbi_health">SBI General Health Insurance</option>
+          <option value="lic_jeevan_arogya">LIC Jeevan Arogya</option>
+          <option value="lic_health_protection_plus">LIC Health Protection Plus</option>
+          <option value="long_term_ulip_health">Long-Term ULIP Health</option>
+          <option value="health_companion">Health Companion (GEN617)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── Dashboard ── -->
+      <div class="screen active" id="screen-dashboard">
+        <div class="health-notice">
+          🏥 <div><strong>Healthcare Insurance Assistant</strong> — All features are specific to health &amp; medical insurance claims only.</div>
+        </div>
+        <div class="stats-row" id="stats-row">
+          <div class="stat-card"><div class="stat-lbl">Total Claims</div><div class="stat-val" id="stat-total">—</div><div class="stat-sub">Health claims filed</div></div>
+          <div class="stat-card"><div class="stat-lbl">Approved</div><div class="stat-val" id="stat-approved" style="color:var(--green)">—</div><div class="stat-sub"><span class="dot" style="background:var(--green)"></span>Paid out</div></div>
+          <div class="stat-card"><div class="stat-lbl">Denied</div><div class="stat-val" id="stat-denied" style="color:var(--red)">—</div><div class="stat-sub"><span class="dot" style="background:var(--red)"></span>Needs appeal</div></div>
+          <div class="stat-card"><div class="stat-lbl">Total Covered</div><div class="stat-val" id="stat-covered" style="font-size:19px">—</div><div class="stat-sub">Approved amount</div></div>
+        </div>
+        <div class="sec-hdr">
+          <div class="sec-title">Recent Health Claims</div>
+          <button class="topbar-btn" onclick="showScreen('myclaims',document.querySelectorAll('.nav-item')[1])">View All Claims →</button>
+        </div>
+        <div class="tbl">
+          <div class="tbl-head"><div class="th">Claim</div><div class="th">Hospital / Insurer</div><div class="th">Amount</div><div class="th">Status</div></div>
+          <div id="recent-claims"></div>
+        </div>
+      </div>
+
+      <!-- ── My Claims ── -->
+      <div class="screen" id="screen-myclaims">
+        <div class="claims-summary">
+          <div class="sum-card">
+            <div class="sum-icon" style="background:var(--accent-light)">📋</div>
+            <div><div class="sum-val" id="mc-total" style="color:var(--accent)">0</div><div class="sum-lbl">Total Claims</div></div>
+          </div>
+          <div class="sum-card">
+            <div class="sum-icon" style="background:var(--green-light)">✅</div>
+            <div><div class="sum-val" id="mc-approved" style="color:var(--green)">0</div><div class="sum-lbl">Approved</div></div>
+          </div>
+          <div class="sum-card">
+            <div class="sum-icon" style="background:var(--red-light)">❌</div>
+            <div><div class="sum-val" id="mc-denied" style="color:var(--red)">0</div><div class="sum-lbl">Denied</div></div>
+          </div>
+        </div>
+        <div class="sec-hdr">
+          <div class="sec-title">All Health Insurance Claims</div>
+          <div class="filter-bar">
+            <div class="fc active" onclick="filterClaims('all',this)">All</div>
+            <div class="fc" onclick="filterClaims('approved',this)">✅ Approved</div>
+            <div class="fc" onclick="filterClaims('denied',this)">❌ Denied</div>
+            <div class="fc" onclick="filterClaims('pending',this)">⏳ Pending</div>
+          </div>
+        </div>
+        <div class="tbl">
+          <div class="tbl-head"><div class="th">Claim</div><div class="th">Hospital / Insurer</div><div class="th">Amount</div><div class="th">Status</div><div class="th">Action</div></div>
+          <div id="claims-list"></div>
+        </div>
+      </div>
+
+      <!-- ── Explain Denial ── -->
+      <div class="screen" id="screen-explain">
+        <div class="sec-hdr">
+          
+          <div style="display:flex;gap:10px">
+            <button class="topbar-btn" onclick="loadExplanation()">Refresh Analysis</button>
+            <button class="topbar-btn primary" onclick="openAppealModal()">Draft Appeal Letter</button>
+          </div>
+        </div>
+        <div id="exp-empty" class="empty-state">
+          <div class="ei">🏥</div>
+          <h3>Select a Health Claim to Analyse</h3>
+          <p>Click "Analyse" on any claim from <em>My Claims</em> to get AI-powered denial analysis &amp; appeal steps.</p>
+        </div>
+        <div class="exp-layout" id="exp-content" style="display:none">
+          <div class="exp-main">
+            <div class="exp-card">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+                <div>
+                  <h2 id="exp-title" style="font-family:var(--font-display);font-size:19px;font-weight:600;color:var(--text);margin-bottom:8px">—</h2>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <span class="badge" id="exp-status-badge">—</span>
+                    <span class="badge" style="background:var(--teal-light);color:var(--teal)">🏥 Health Insurance</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:22px;flex-wrap:wrap">
+                <div><div style="font-size:14px;font-weight:500;color:var(--text)" id="exp-amount">—</div><div style="font-size:11px;color:var(--text-soft)">Claim Amount</div></div>
+                <div><div style="font-size:14px;font-weight:500;color:var(--text)" id="exp-hospital">—</div><div style="font-size:11px;color:var(--text-soft)">Hospital / Insurer</div></div>
+                <div><div style="font-size:14px;font-weight:500;color:var(--text)" id="exp-id">—</div><div style="font-size:11px;color:var(--text-soft)">Claim ID</div></div>
+              </div>
+            </div>
+            <div class="exp-card">
+              <div class="exp-card-lbl">AI Analysis Summary</div>
+              <div id="exp-summary" style="font-size:14.5px;color:var(--text);line-height:1.75">
+                <div class="ai-loading"><span class="spin d"></span>Select a claim to begin…</div>
+              </div>
+            </div>
+            <div class="exp-card">
+              <div class="exp-card-lbl">Appeal Steps</div>
+              <ul class="steps-list" id="exp-steps"></ul>
+            </div>
+            <div class="exp-card">
+              <div class="exp-card-lbl">Required Documents</div>
+              <ul class="steps-list" id="exp-docs-list"></ul>
+            </div>
+          </div>
+          <div class="exp-sidebar">
+            <div class="appeal-box">
+              <div style="font-size:22px;margin-bottom:8px">⚖️</div>
+              <div class="appeal-box-title">Draft Appeal Letter</div>
+              <div class="appeal-box-sub" id="appeal-conf-text">AI can draft an IRDAI-compliant health insurance appeal letter.</div>
+              <button class="appeal-box-btn" onclick="openAppealModal()">Generate Appeal Letter →</button>
+            </div>
+            <div class="gls-card">
+              <div class="gls-title">Health Insurance Terms</div>
+              <div id="exp-terms"><div style="font-size:13px;color:var(--text-soft)">Loading…</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AI Chat ── -->
+      <div class="screen" id="screen-chat">
+        <div class="chat-wrap">
+          <div class="chat-side">
+            <div class="chat-side-head">
+              <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:9px">Health Claims</div>
+              <input class="search-inp" placeholder="Search claims…" oninput="filterChatList(this.value)"/>
+            </div>
+            <div id="chat-claims-list"></div>
+          </div>
+          <div class="chat-main">
+            <div class="chat-hdr">
+              <div class="chat-hdr-info">
+                <h3 id="chat-hdr-title">Select a health claim</h3>
+                <p id="chat-hdr-sub">Healthcare insurance AI — ask anything about your policy</p>
+              </div>
+              <div class="ai-ind"><div class="ai-dot"></div>Healthcare AI Active</div>
+            </div>
+            <div class="chat-msgs" id="chat-msgs">
+              <div class="msg ai">
+                <div class="msg-av ai">CC</div>
+                <div>
+                  <div class="msg-bbl">👋 Hello! I'm <strong>ClaimClear AI</strong> — your healthcare insurance specialist. I help with health policy questions, denied claims, appeal letters, and more. Select a claim from the left to begin!</div>
+                  <div class="msg-time">ClaimClear AI · Just now</div>
+                </div>
+              </div>
+            </div>
+            <div class="sq-bar" id="sq-bar" style="display:none">
+              <div class="sq" onclick="sendSQ(this)">Why was my claim denied?</div>
+              <div class="sq" onclick="sendSQ(this)">What documents do I need?</div>
+              <div class="sq" onclick="sendSQ(this)">How do I appeal this?</div>
+              <div class="sq" onclick="sendSQ(this)">What does waiting period mean?</div>
+            </div>
+            <div class="chat-inp-area">
+              <textarea class="chat-ta" id="chat-inp" placeholder="Ask about your health insurance…" rows="1" onkeydown="handleKey(event)"></textarea>
+              <button class="send-btn" id="send-btn" onclick="sendMsg()">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Compare Policies ── -->
+      <div class="screen" id="screen-compare">
+        <div class="compare-hero">
+          <div class="hero-badge">🌐 AI-POWERED · WEB SEARCH</div>
+          <h2>Compare Health Insurance Policies</h2>
+          <p>Enter 2–5 policy names from any insurer worldwide. Our AI analyses policy details and gives you a full side-by-side comparison with a personalised recommendation.</p>
+        </div>
+        <div class="cmp-form">
+          <div class="fg">
+            <label class="flbl">Policy Names <span style="color:var(--text-soft);font-weight:400">(enter 2–5 policies, one per line)</span></label>
+            <textarea class="fta" id="cmp-policy-names" style="min-height:130px" placeholder="e.g.
+Star Health Comprehensive Plan
+HDFC ERGO Optima Secure
+
+"></textarea>
+            <div style="font-size:11.5px;color:var(--text-soft);margin-top:6px">💡 Enter full policy names for best results. Works with any insurer — Indian or international.</div>
+          </div>
+          <div class="fg">
+            <label class="flbl">Your Use Case / Health Profile <span style="color:var(--text-soft);font-weight:400">(helps AI recommend the best policy for you)</span></label>
+            <input class="finp" id="cmp-condition" placeholder="e.g. 35-year-old, family of 4, need maternity cover, diabetic, budget ₹15,000/year…"/>
+          </div>
+          <button class="btn-pri" id="cmp-btn" onclick="runCompare()">Compare Policies →</button>
+        </div>
+        <div id="cmp-result" style="display:none">
+          <div class="cmp-result">
+            <div style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text);margin-bottom:3px">Policy Comparison Report</div>
+            <div style="font-size:12.5px;color:var(--text-soft);margin-bottom:18px" id="cmp-meta">Generated by ClaimClear AI</div>
+            <div id="cmp-loading-info" class="cmp-loading-info">
+              <span class="spin"></span><span id="cmp-status-txt">Searching the web for policy details…</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="cmp-tbl">
+                <thead id="cmp-thead"></thead>
+                <tbody id="cmp-tbody"></tbody>
+              </table>
+            </div>
+            <div class="rec-box" id="rec-box" style="display:none">
+              <h3>🔍 Overall Recommendation</h3>
+              <p id="cmp-rec"></p>
+            </div>
+            <div class="cond-box" id="cond-box" style="display:none">
+              <h3>🎯 Best Policy for Your Use Case</h3>
+              <p id="cond-rec"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Claim Predictor ── -->
+      <div class="screen" id="screen-predict">
+        <div class="pred-hero">
+          <div class="hero-badge" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.85)">🤖 AI PREDICTION ENGINE</div>
+          <h2>Will My Health Claim Be Approved?</h2>
+          <p>Describe your health insurance scenario. AI will predict approval likelihood based on policy terms, waiting periods, exclusions, and claim details.</p>
+        </div>
+        <div class="pred-form">
+          <div class="f2">
+            <div class="fg">
+              <label class="flbl">Diagnosis / Medical Condition</label>
+              <input class="finp" id="pd-diag" placeholder="e.g. Appendicitis, Knee replacement…"/>
+            </div>
+            <div class="fg">
+              <label class="flbl">Hospital Name</label>
+              <input class="finp" id="pd-hospital" placeholder="e.g. Apollo Hospital, Delhi"/>
+            </div>
+          </div>
+          <div class="f2">
+            <div class="fg">
+              <label class="flbl">Claim Amount (₹)</label>
+              <input class="finp" id="pd-amount" type="number" placeholder="e.g. 150000"/>
+            </div>
+            <div class="fg">
+              <label class="flbl">Days Since Policy Started</label>
+              <input class="finp" id="pd-days" type="number" placeholder="e.g. 365" min="0"/>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="flbl">Claim Description <span style="color:var(--red)">*</span></label>
+            <textarea class="fta" id="pd-desc" style="min-height:110px" placeholder="Describe the medical situation, treatment required, any pre-existing conditions, and why you're filing this claim…"></textarea>
+          </div>
+          <div class="fg">
+            <label class="flbl">Reference Policy <span style="color:var(--text-soft);font-weight:400">(optional — makes prediction more accurate)</span></label>
+            <select class="fsel" id="pd-policy">
+              <option value="">Use general health insurance knowledge</option>
+              <option value="sbi_health">SBI General Health Insurance</option>
+              <option value="lic_jeevan_arogya">LIC Jeevan Arogya</option>
+              <option value="lic_health_protection_plus">LIC Health Protection Plus</option>
+              <option value="long_term_ulip_health">Long-Term ULIP Health</option>
+              <option value="health_companion">Health Companion (GEN617)</option>
+            </select>
+          </div>
+          <button class="btn-pri" id="pred-btn" onclick="runPredict()">Predict Claim Outcome →</button>
+        </div>
+        <div id="pred-result" style="display:none">
+          <div class="pred-result">
+            <div class="verdict" id="verdict">
+              <div class="verdict-icon" id="v-icon">🤔</div>
+              <div class="verdict-lbl" id="v-lbl">Analysing…</div>
+              <div class="verdict-conf" id="v-conf"></div>
+              <div class="conf-track"><div class="conf-fill" id="conf-fill" style="width:0%;background:var(--accent)"></div></div>
+              <div style="font-size:11.5px;color:var(--text-soft)" id="conf-lbl">AI Confidence Score</div>
+            </div>
+            <div class="pred-sec">
+              <div class="pred-sec-lbl">Why this prediction</div>
+              <ul class="pred-list" id="v-reasons"></ul>
+            </div>
+            <div class="pred-sec">
+              <div class="pred-sec-lbl">Risk Factors</div>
+              <ul class="pred-list" id="v-risks"></ul>
+            </div>
+            <div class="pred-sec">
+              <div class="pred-sec-lbl">Suggestions to Improve Approval Chances</div>
+              <ul class="pred-list" id="v-suggestions"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ── Submit Claim Modal ── -->
+<div class="overlay" id="modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">Submit New Health Insurance Claim</div>
+      <button class="modal-x" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--teal-light);border:1px solid #99e6dd;border-radius:8px;padding:9px 13px;font-size:12.5px;color:var(--teal);margin-bottom:16px;">🏥 Healthcare insurance claims only</div>
+      <div class="f2">
+        <div class="fg">
+          <label class="flbl">Claim Status</label>
+          <select class="fsel" id="m-status"><option>Pending</option><option>Denied</option><option>Approved</option></select>
+        </div>
+        <div class="fg">
+          <label class="flbl">Claim Amount (₹)</label>
+          <input class="finp" id="m-amount" type="number" placeholder="e.g. 150000"/>
+        </div>
+      </div>
+      <div class="f2">
+        <div class="fg">
+          <label class="flbl">Health Insurer</label>
+          <input class="finp" id="m-insurer" placeholder="e.g. Star Health, HDFC Ergo…"/>
+        </div>
+        <div class="fg">
+          <label class="flbl">Hospital Name</label>
+          <input class="finp" id="m-hospital" placeholder="e.g. Apollo Hospital, Delhi"/>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="flbl">Claim Description</label>
+        <textarea class="fta" id="m-desc" placeholder="Describe the medical condition, treatment, hospital stay, and reason for this claim…"></textarea>
+      </div>
+      <div class="ai-box" id="modal-ai-box">
+        <div class="ai-box-title">AI Triage Result</div>
+        <div id="modal-ai-text" style="font-size:13.5px;color:var(--text-mid);line-height:1.65;"></div>
+        <div id="modal-pred-box" style="display:none"></div>
+        <ul class="req-docs" id="modal-docs"></ul>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost" onclick="document.getElementById('modal').classList.remove('open')">Cancel</button>
+        <button class="btn-pri" id="m-submit-btn" onclick="submitClaim()">Submit Claim</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Appeal Modal ── -->
+<div class="overlay" id="appeal-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:620px">
+    <div class="modal-hdr">
+      <div class="modal-title">Draft Health Insurance Appeal Letter</div>
+      <button class="modal-x" onclick="document.getElementById('appeal-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label class="flbl">Your Full Name</label>
+        <input class="finp" id="a-name" placeholder="e.g. Rahul Sharma"/>
+      </div>
+      <div class="appeal-result" id="appeal-result">
+        <div style="font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px">Generated Appeal Letter</div>
+        <pre class="letter-pre" id="appeal-txt">Click "Generate" to draft your IRDAI-compliant health insurance appeal letter.</pre>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost" onclick="document.getElementById('appeal-modal').classList.remove('open')">Close</button>
+        <button class="btn-ghost" id="copy-btn" onclick="copyLetter()" style="display:none;color:var(--teal);border-color:var(--teal)">📋 Copy</button>
+        <button class="btn-pri" id="gen-btn" onclick="genAppeal()">Generate →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let claims = [], activeClaim = null, activeChatClaim = null, chatHistory = [];
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(e.detail || res.statusText);
+  }
+  return res.json();
+}
+
+function toast(msg, ms = 2800) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), ms);
+}
+
+const SCREEN_TITLES = {
+  dashboard: 'Healthcare Dashboard',
+  myclaims: 'My Claims',
+  explain: 'AI Claim Analysis',
+  chat: 'AI Chat Assistant',
+  compare: 'Compare Policies',
+  predict: 'Claim Predictor'
+};
+
+function showScreen(id, navEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('topbar-title').textContent = SCREEN_TITLES[id] || '';
+  if (id === 'chat' && claims.length) buildChatList();
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const d = await apiFetch('/api/claims/stats');
+    document.getElementById('stat-total').textContent = d.total_claims;
+    document.getElementById('stat-approved').textContent = d.approved;
+    document.getElementById('stat-denied').textContent = d.denied;
+    document.getElementById('stat-covered').textContent = d.total_covered;
+    document.getElementById('nb-claims').textContent = d.total_claims;
+    document.getElementById('recent-claims').innerHTML =
+      (d.recent_activity || []).map(c => claimRowHTML(c, true)).join('');
+  } catch(e) { toast('Dashboard error: ' + e.message); }
+}
+
+// ─── Claims ───────────────────────────────────────────────────────────────────
+async function loadClaims() {
+  try {
+    const d = await apiFetch('/api/claims');
+    claims = d.claims || [];
+    renderMyClaims(claims);
+    // Update My Claims summary counters
+    document.getElementById('mc-total').textContent = d.total || claims.length;
+    document.getElementById('mc-approved').textContent = d.approved || 0;
+    document.getElementById('mc-denied').textContent = d.denied || 0;
+    document.getElementById('nb-claims').textContent = claims.length;
+  } catch(e) { toast('Claims error: ' + e.message); }
+}
+
+function statusIcon(s) {
+  return s === 'approved' ? '✅' : s === 'denied' ? '❌' : s === 'pending' ? '⏳' : '🔄';
+}
+
+function claimRowHTML(c, minimal = false) {
+  const badge = `<span class="badge ${c.status}">${statusIcon(c.status)} ${c.status.charAt(0).toUpperCase()+c.status.slice(1)}</span>`;
+  const onclick = minimal ? '' : `onclick="openExplain('${c.id}')"`;
+  return `<div class="tbl-row" ${onclick}>
+    <div class="cl-name">
+      <div class="cl-icon">🏥</div>
+      <div><div class="cl-title">${c.title}</div><div class="cl-id">${c.id} · ${c.date || ''}</div></div>
+    </div>
+    <div class="td">${c.hospital || '—'}</div>
+    <div class="td">${c.amount}</div>
+    <div class="td">${badge}</div>
+    <div class="td">${!minimal ? `<button class="act-btn" onclick="event.stopPropagation();openExplain('${c.id}')">Analyse</button>` : ''}</div>
+  </div>`;
+}
+
+function renderMyClaims(list) {
+  const el = document.getElementById('claims-list');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><div class="ei">📋</div><h3>No Claims Found</h3><p>Submit a new health insurance claim to get started.</p></div>';
+    return;
+  }
+  el.innerHTML = list.map(c => claimRowHTML(c)).join('');
+}
+
+function filterClaims(f, el) {
+  document.querySelectorAll('.fc').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  const filtered = f === 'all' ? claims : claims.filter(c => c.status === f);
+  renderMyClaims(filtered);
+}
+
+// ─── Explain ──────────────────────────────────────────────────────────────────
+async function openExplain(id) {
+  activeClaim = claims.find(c => c.id === id);
+  if (!activeClaim) return;
+  document.getElementById('exp-empty').style.display = 'none';
+  document.getElementById('exp-content').style.display = 'grid';
+  document.getElementById('exp-title').textContent = activeClaim.title;
+  document.getElementById('exp-amount').textContent = activeClaim.amount;
+  document.getElementById('exp-hospital').textContent = activeClaim.hospital;
+  document.getElementById('exp-id').textContent = activeClaim.id;
+  const sb = document.getElementById('exp-status-badge');
+  sb.className = 'badge ' + activeClaim.status;
+  sb.textContent = statusIcon(activeClaim.status) + ' ' + activeClaim.status.charAt(0).toUpperCase() + activeClaim.status.slice(1);
+  // Navigate to AI Claim Analysis screen, highlight its nav item
+  showScreen('explain', document.getElementById('nav-explain'));
+  await loadExplanation();
+}
+
+async function loadExplanation() {
+  if (!activeClaim) return;
+  const policyId = document.getElementById('policy-selector').value;
+  document.getElementById('exp-summary').innerHTML = '<div class="ai-loading"><span class="spin d"></span>AI is analysing your health claim…</div>';
+  document.getElementById('exp-steps').innerHTML = '';
+  document.getElementById('exp-docs-list').innerHTML = '';
+  document.getElementById('exp-terms').innerHTML = '<div style="font-size:13px;color:var(--text-soft)">Loading…</div>';
+  try {
+    const d = await apiFetch(`/api/claims/${activeClaim.id}/explain`, {
+      method: 'POST',
+      body: JSON.stringify({
+        claim_id: activeClaim.id, claim_title: activeClaim.title,
+        claim_type: 'Health', amount: activeClaim.amount,
+        status: activeClaim.status, insurer: activeClaim.hospital,
+        denial_reason: '', policy_id: policyId,
+      }),
+    });
+    document.getElementById('exp-summary').textContent = d.summary || 'Analysis complete.';
+    document.getElementById('exp-steps').innerHTML = (d.appeal_steps || []).map(s => `
+      <li class="step-item">
+        <div class="step-num ${s.is_done?'done':''}">${s.is_done?'✓':s.step_number}</div>
+        <div><div class="step-title">${s.title}</div><div class="step-desc">${s.description}</div></div>
+      </li>`).join('');
+    document.getElementById('exp-docs-list').innerHTML = (d.required_documents || []).map(doc => `
+      <li class="step-item">
+        <div class="step-num" style="background:var(--teal);font-size:9px">✓</div>
+        <div><div class="step-title" style="font-size:13px;font-weight:400">${doc}</div></div>
+      </li>`).join('');
+    document.getElementById('exp-terms').innerHTML = (d.key_terms || []).map(t => `
+      <div class="gls-item"><div class="gls-term">${t.term}</div><div class="gls-def">${t.definition}</div></div>`
+    ).join('') || '<div style="font-size:13px;color:var(--text-soft)">No terms.</div>';
+    if (d.has_appeal_angle)
+      document.getElementById('appeal-conf-text').textContent = `Appeal confidence: ${d.appeal_confidence}. AI can draft an IRDAI-compliant appeal letter.`;
+  } catch(e) {
+    document.getElementById('exp-summary').textContent = 'Error: ' + e.message;
+    toast('Analysis failed: ' + e.message);
+  }
+}
+
+// ─── Appeal Letter ────────────────────────────────────────────────────────────
+function openAppealModal() {
+  document.getElementById('appeal-modal').classList.add('open');
+  document.getElementById('appeal-result').classList.remove('show');
+  document.getElementById('copy-btn').style.display = 'none';
+  document.getElementById('appeal-txt').textContent = 'Click "Generate" to draft your IRDAI-compliant appeal letter.';
+}
+async function genAppeal() {
+  if (!activeClaim) { toast('Select a claim first.'); return; }
+  const name = document.getElementById('a-name').value.trim() || 'Policyholder';
+  const pid = document.getElementById('policy-selector').value;
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Drafting…';
+  document.getElementById('appeal-result').classList.add('show');
+  document.getElementById('appeal-txt').textContent = 'AI is drafting your letter…';
+  try {
+    const d = await apiFetch(`/api/claims/${activeClaim.id}/appeal-letter`, {
+      method: 'POST',
+      body: JSON.stringify({
+        claim_id: activeClaim.id, claim_title: activeClaim.title,
+        claimant_name: name, insurer: activeClaim.hospital,
+        denial_reason: `${activeClaim.status} claim for ${activeClaim.amount}`,
+        amount: activeClaim.amount, policy_id: pid,
+      }),
+    });
+    document.getElementById('appeal-txt').textContent = d.letter;
+    document.getElementById('copy-btn').style.display = 'inline-flex';
+    toast('Appeal letter drafted!');
+  } catch(e) {
+    document.getElementById('appeal-txt').textContent = 'Error: ' + e.message;
+    toast('Error: ' + e.message);
+  } finally { btn.disabled = false; btn.textContent = 'Regenerate →'; }
+}
+function copyLetter() {
+  navigator.clipboard.writeText(document.getElementById('appeal-txt').textContent)
+    .then(() => toast('Copied!'));
+}
+
+// ─── Submit Claim ─────────────────────────────────────────────────────────────
+async function submitClaim() {
+  const amount = document.getElementById('m-amount').value.trim();
+  const insurer = document.getElementById('m-insurer').value.trim();
+  const desc = document.getElementById('m-desc').value.trim();
+  if (!amount || !insurer || !desc) { toast('Fill all required fields.'); return; }
+  const btn = document.getElementById('m-submit-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Submitting…';
+  try {
+    const d = await apiFetch('/api/claims', {
+      method: 'POST',
+      body: JSON.stringify({
+        claim_type: 'Health Insurance',
+        claim_status: document.getElementById('m-status').value,
+        amount, insurer, description: desc,
+        hospital: document.getElementById('m-hospital').value.trim(),
+      }),
+    });
+    const box = document.getElementById('modal-ai-box'); box.classList.add('show');
+    document.getElementById('modal-ai-text').textContent = d.ai_summary || 'Claim submitted.';
+    if (d.claim_prediction) {
+      const cls = d.claim_prediction.includes('Approved') ? 'approved' : d.claim_prediction.includes('Denied') ? 'denied' : 'uncertain';
+      const ico = cls === 'approved' ? '✅' : cls === 'denied' ? '❌' : '⚠️';
+      const pb = document.getElementById('modal-pred-box');
+      pb.className = 'pred-inline ' + cls;
+      pb.textContent = `${ico} AI Prediction: ${d.claim_prediction} (${d.prediction_confidence} confidence)`;
+      pb.style.display = 'flex';
+    }
+    document.getElementById('modal-docs').innerHTML = (d.required_documents || []).slice(0,6).map(x=>`<li>${x}</li>`).join('');
+    toast(`✅ Claim ${d.claim_id} submitted!`);
+    await Promise.all([loadDashboard(), loadClaims()]);
+  } catch(e) { toast('Submit failed: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Submit Claim'; }
+}
+
+// ─── Chat ─────────────────────────────────────────────────────────────────────
+function buildChatList() {
+  const el = document.getElementById('chat-claims-list');
+  el.innerHTML = claims.map((c, i) => `
+    <div class="chat-cl-item ${i===0?'active':''}" onclick="selectChat(this,'${c.id}')">
+      <div class="chat-cl-title">${statusIcon(c.status)} ${c.title}</div>
+      <div class="chat-cl-sub">${c.status.charAt(0).toUpperCase()+c.status.slice(1)} · ${c.amount}</div>
+    </div>`).join('');
+  if (claims.length) selectChat(el.querySelector('.chat-cl-item'), claims[0].id);
+}
+function selectChat(el, id) {
+  document.querySelectorAll('.chat-cl-item').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  activeChatClaim = claims.find(c => c.id === id);
+  chatHistory = [];
+  if (activeChatClaim) {
+    document.getElementById('chat-hdr-title').textContent = activeChatClaim.title;
+    document.getElementById('chat-hdr-sub').textContent = `${activeChatClaim.id} · ${activeChatClaim.status} · ${activeChatClaim.amount}`;
+    document.getElementById('chat-msgs').innerHTML = `
+      <div class="msg ai">
+        <div class="msg-av ai">CC</div>
+        <div>
+          <div class="msg-bbl">I've loaded <strong>${activeChatClaim.id}</strong> — ${activeChatClaim.title} (${activeChatClaim.amount}, ${activeChatClaim.status}). What would you like to know about your health insurance?</div>
+          <div class="msg-time">ClaimClear AI · Just now</div>
+        </div>
+      </div>`;
+    document.getElementById('sq-bar').style.display = 'flex';
+  }
+}
+function filterChatList(q) {
+  document.querySelectorAll('.chat-cl-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+function addMsg(text, role, sources=[]) {
+  const c = document.getElementById('chat-msgs');
+  const d = document.createElement('div'); d.className = 'msg ' + role;
+  const av = role === 'ai' ? 'CC' : 'U';
+  const src = role === 'ai' && sources.length ? `<div style="font-size:10.5px;color:var(--text-soft);margin-top:3px;font-style:italic">📋 ${sources.slice(0,2).join(', ')}</div>` : '';
+  d.innerHTML = `<div class="msg-av ${role}">${av}</div><div><div class="msg-bbl">${text.replace(/\n/g,'<br>')}</div><div class="msg-time">${role==='ai'?'ClaimClear AI':'You'} · Just now</div>${src}</div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+function addTyping() {
+  const c = document.getElementById('chat-msgs');
+  const d = document.createElement('div'); d.className = 'msg ai'; d.id = 'typing';
+  d.innerHTML = `<div class="msg-av ai">CC</div><div><div class="msg-bbl" style="color:var(--text-soft);font-style:italic"><span class="spin d"></span>AI is thinking…</div></div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+function removeTyping() { const e = document.getElementById('typing'); if (e) e.remove(); }
+async function sendMsg() {
+  const inp = document.getElementById('chat-inp');
+  const text = inp.value.trim(); if (!text) return;
+  inp.value = ''; document.getElementById('sq-bar').style.display = 'none';
+  document.getElementById('send-btn').disabled = true;
+  addMsg(text, 'user'); chatHistory.push({ role: 'user', content: text }); addTyping();
+  try {
+    const d = await apiFetch('/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({
+        claim_id: activeChatClaim?.id || '',
+        claim_context: activeChatClaim || {},
+        messages: chatHistory,
+        policy_id: document.getElementById('policy-selector').value,
+      }),
+    });
+    removeTyping(); addMsg(d.reply, 'ai', d.sources || []);
+    chatHistory.push({ role: 'assistant', content: d.reply });
+    if (d.suggested_questions?.length) {
+      const sq = document.getElementById('sq-bar');
+      sq.innerHTML = d.suggested_questions.map(q=>`<div class="sq" onclick="sendSQ(this)">${q}</div>`).join('');
+      sq.style.display = 'flex';
+    }
+  } catch(e) {
+    removeTyping(); addMsg('Error: ' + e.message, 'ai');
+    toast('Chat error: ' + e.message);
+  } finally { document.getElementById('send-btn').disabled = false; }
+}
+function sendSQ(el) { document.getElementById('chat-inp').value = el.textContent; sendMsg(); }
+function handleKey(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+
+// ─── Compare (via backend, no direct Anthropic call) ──────────────────────────
+async function runCompare() {
+  const rawNames = document.getElementById('cmp-policy-names').value.trim();
+  if (!rawNames) { toast('Please enter at least 2 policy names.'); return; }
+  const policyNames = rawNames.split('\n').map(s => s.trim()).filter(Boolean);
+  if (policyNames.length < 2) { toast('Enter at least 2 policy names (one per line).'); return; }
+  if (policyNames.length > 5) { toast('Maximum 5 policies at a time.'); return; }
+
+  const btn = document.getElementById('cmp-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Searching & Comparing…';
+  document.getElementById('cmp-result').style.display = 'block';
+  document.getElementById('cmp-loading-info').style.display = 'flex';
+  document.getElementById('cmp-thead').innerHTML = '';
+  document.getElementById('cmp-tbody').innerHTML = '';
+  document.getElementById('rec-box').style.display = 'none';
+  document.getElementById('cond-box').style.display = 'none';
+
+  const condition = document.getElementById('cmp-condition').value.trim();
+  const statusTxt = document.getElementById('cmp-status-txt');
+  const statusMsgs = [
+    'Analysing policy details…',
+    'Fetching coverage and benefits info…',
+    'Analysing waiting periods and exclusions…',
+    'Building comparison table…',
+    'Generating recommendation…'
+  ];
+  let si = 0;
+  const statusInterval = setInterval(() => { si = (si+1) % statusMsgs.length; statusTxt.textContent = statusMsgs[si]; }, 2800);
+
+  try {
+    const response = await fetch(API + '/api/policies/compare-by-name', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ policy_names: policyNames, user_condition: condition })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: response.statusText }));
+      throw new Error(err.detail || 'Comparison failed');
+    }
+
+    const parsed = await response.json();
+    clearInterval(statusInterval);
+
+    // Normalise to the shape renderCmpResult expects
+    const normalised = {
+      policies: parsed.policies,
+      features: parsed.features,
+      recommendation: parsed.recommendation || '',
+      best_for_condition: parsed.best_for_condition || ''
+    };
+    renderCmpResult(normalised, condition);
+    toast('✅ Comparison complete!');
+  } catch(e) {
+    clearInterval(statusInterval);
+    toast('Compare failed: ' + e.message);
+    console.error(e);
+  } finally {
+    document.getElementById('cmp-loading-info').style.display = 'none';
+    btn.disabled = false; btn.textContent = 'Compare Policies →';
+  }
+}
+
+function renderCmpResult(d, cond) {
+  document.getElementById('cmp-result').style.display = 'block';
+  document.getElementById('cmp-meta').textContent = `Comparing ${d.policies.length} policies · ClaimClear AI`;
+  document.getElementById('cmp-thead').innerHTML = '<tr><th>Feature</th>' + d.policies.map(p=>`<th>${p}</th>`).join('') + '</tr>';
+  document.getElementById('cmp-tbody').innerHTML = (d.features||[]).map(f =>
+    `<tr><td><strong>${f.category}</strong></td>${d.policies.map(p=>`<td>${f.values?.[p]||'—'}</td>`).join('')}</tr>`
+  ).join('');
+  const recBox = document.getElementById('rec-box'); recBox.style.display = 'block';
+  document.getElementById('cmp-rec').textContent = d.recommendation || 'See table above.';
+  const cb = document.getElementById('cond-box');
+  if (cond && d.best_for_condition) {
+    cb.style.display = 'block';
+    document.getElementById('cond-rec').textContent = d.best_for_condition;
+  } else cb.style.display = 'none';
+  document.getElementById('cmp-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─── Predict ──────────────────────────────────────────────────────────────────
+async function runPredict() {
+  const desc = document.getElementById('pd-desc').value.trim();
+  if (!desc) { toast('Please describe the claim scenario.'); return; }
+  const btn = document.getElementById('pred-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Predicting…';
+  document.getElementById('pred-result').style.display = 'none';
+  try {
+    const d = await apiFetch('/api/claims/predict', {
+      method: 'POST',
+      body: JSON.stringify({
+        description: desc,
+        diagnosis: document.getElementById('pd-diag').value.trim(),
+        hospital: document.getElementById('pd-hospital').value.trim(),
+        amount: document.getElementById('pd-amount').value.trim(),
+        policy_id: document.getElementById('pd-policy').value,
+        days_since_policy_start: parseInt(document.getElementById('pd-days').value)||0,
+      }),
+    });
+    renderVerdict(d);
+    toast('✅ Prediction ready!');
+  } catch(e) { toast('Predict failed: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Predict Claim Outcome →'; }
+}
+function renderVerdict(d) {
+  const el = document.getElementById('pred-result'); el.style.display = 'block';
+  const cls = d.prediction.includes('Approved') ? 'approved' : d.prediction.includes('Denied') ? 'denied' : 'uncertain';
+  document.getElementById('verdict').className = 'verdict ' + cls;
+  document.getElementById('v-icon').textContent = cls==='approved'?'✅':cls==='denied'?'❌':'⚠️';
+  const lbl = document.getElementById('v-lbl'); lbl.className = 'verdict-lbl ' + cls; lbl.textContent = d.prediction;
+  document.getElementById('v-conf').textContent = `Confidence: ${d.confidence} (${d.confidence_score}%)`;
+  const fill = document.getElementById('conf-fill');
+  fill.style.width = d.confidence_score + '%';
+  fill.style.background = cls==='approved'?'var(--green)':cls==='denied'?'var(--red)':'var(--amber)';
+  document.getElementById('v-reasons').innerHTML = (d.reasons||[]).map(r=>`<li><span>💡</span>${r}</li>`).join('');
+  document.getElementById('v-risks').innerHTML = (d.risk_factors||[]).map(r=>`<li><span>⚠️</span>${r}</li>`).join('');
+  document.getElementById('v-suggestions').innerHTML = (d.suggestions||[]).map(s=>`<li><span>✅</span>${s}</li>`).join('');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+(async () => {
+  await Promise.all([loadDashboard(), loadClaims()]);
+})();
+</script>
+</body>
+</html>
